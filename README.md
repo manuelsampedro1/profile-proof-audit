@@ -2,7 +2,7 @@
 
 Audit a GitHub profile README for proof quality, required sections, and broken links.
 
-Strong AI-builder profiles should not rely on vibes. They should make clear claims, link to real artifacts, and avoid promoting local-only work as public proof. `profile-proof-audit` reads a Markdown profile surface and produces a small report with issues, warnings, link checks, and a proof score.
+Strong AI-builder profiles should not rely on vibes. They should state clear claims, link to real artifacts, and avoid promoting local-only work as public proof. `profile-proof-audit` reads a Markdown profile surface and produces a small report with issues, warnings, link checks, and a proof score.
 
 ## What It Checks
 
@@ -18,22 +18,22 @@ The tool is dependency-free and local-first. It does not edit your profile or cr
 ## Install
 
 ```sh
-python -m pip install --upgrade pip
-python -m pip install -e .
+python3 -m pip install --upgrade pip
+python3 -m pip install -e .
 ```
 
 Or run without installing:
 
 ```sh
-PYTHONPATH=src python -m profile_proof_audit ../goal-quiero-que-me-crees-un/README.md
+PYTHONPATH=src python3 -m profile_proof_audit ../goal-quiero-que-me-crees-un/README.md
 ```
 
 ## Usage
 
 ```sh
-profile-proof-audit README.md
-profile-proof-audit README.md --check-http
-profile-proof-audit README.md --format json
+PYTHONPATH=src python3 -m profile_proof_audit README.md
+PYTHONPATH=src python3 -m profile_proof_audit README.md --check-http
+PYTHONPATH=src python3 -m profile_proof_audit README.md --format json
 ```
 
 ## Example Output
@@ -55,8 +55,10 @@ Score: 92/100
 ## Development
 
 ```sh
-PYTHONPATH=src python -m unittest discover -s tests
-PYTHONPATH=src python -m profile_proof_audit examples/profile.md --format json
+make test
+make lint
+make build
+make smoke
 ```
 
 ## Fit With The Agent Workflow Stack

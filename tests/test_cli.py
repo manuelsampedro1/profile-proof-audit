@@ -1,11 +1,13 @@
 import json
+import socket
 import tempfile
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
-from profile_proof_audit.cli import build_report, main, markdown_links
+from profile_proof_audit.cli import build_report, http_status, main, markdown_links
 
 
 GOOD_README = """# Manuel Sampedro
@@ -78,6 +80,27 @@ class ProfileProofAuditTests(unittest.TestCase):
 
         self.assertIn("Current Focus", report.sections_missing)
         self.assertTrue(any("Missing required section" in issue for issue in report.issues))
+
+    def test_http_status_handles_socket_timeout(self) -> None:
+        with patch("urllib.request.urlopen", side_effect=socket.timeout("timed out")):
+            status = http_status("https://example.com")
+
+        self.assertEqual(status, "unknown")
+
+    def test_http_status_retries_transient_timeout(self) -> None:
+        class Response:
+            status = 200
+
+            def __enter__(self) -> "Response":
+                return self
+
+            def __exit__(self, *_: object) -> None:
+                return None
+
+        with patch("urllib.request.urlopen", side_effect=[socket.timeout("timed out"), Response()]):
+            status = http_status("https://example.com")
+
+        self.assertEqual(status, "ok")
 
     def test_cli_json(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

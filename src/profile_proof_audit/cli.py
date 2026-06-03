@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import socket
 import sys
 import urllib.error
 import urllib.parse
@@ -88,15 +89,20 @@ def is_external(target: str) -> bool:
     return parsed.scheme in {"http", "https"}
 
 
-def http_status(target: str, timeout: float = 5.0) -> str:
+def http_status(target: str, timeout: float = 5.0, attempts: int = 2) -> str:
     request = urllib.request.Request(target, method="GET", headers={"User-Agent": "profile-proof-audit"})
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            status = getattr(response, "status", 0)
-    except urllib.error.HTTPError as error:
-        status = error.code
-    except (urllib.error.URLError, TimeoutError):
-        return "unknown"
+    status = 0
+    for attempt in range(max(1, attempts)):
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                status = getattr(response, "status", 0)
+            break
+        except urllib.error.HTTPError as error:
+            status = error.code
+            break
+        except (urllib.error.URLError, TimeoutError, socket.timeout, OSError):
+            if attempt == max(1, attempts) - 1:
+                return "unknown"
     if status == 200:
         return "ok"
     if status == 404:

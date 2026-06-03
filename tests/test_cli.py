@@ -43,6 +43,37 @@ GOOD_README = """# Manuel Sampedro
 """
 
 
+WARNING_README = """# Manuel Sampedro
+
+## Current Focus
+
+- Agent reliability.
+
+## Selected Work
+
+| Repo | What it proves | Why it matters |
+| --- | --- | --- |
+| [repo-one](https://github.com/example/repo-one) | Proof | Useful. |
+
+## How I Work With Codex
+
+- Evidence first.
+
+## Public Workbench
+
+- [Recipe](./recipes/example.md)
+
+## Latest Proof
+
+- [Recipe](./recipes/example.md)
+- [Lab](./labs/example.md)
+
+## Principles
+
+- Ship useful proof.
+"""
+
+
 class ProfileProofAuditTests(unittest.TestCase):
     def test_markdown_links(self) -> None:
         links = markdown_links("See [A](./a.md) and [B](https://example.com).")
@@ -121,6 +152,38 @@ class ProfileProofAuditTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(payload["schema_version"], "profile-proof-audit.v1")
         self.assertEqual(payload["issues"], [])
+
+    def test_cli_default_is_informational(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            readme = Path(tmp) / "README.md"
+            readme.write_text("# Thin Profile\n\nNo proof.\n", encoding="utf-8")
+
+            exit_code = main([str(readme), "--format", "json"])
+
+        self.assertEqual(exit_code, 0)
+
+    def test_cli_min_score_fails_below_threshold(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            readme = Path(tmp) / "README.md"
+            readme.write_text("# Thin Profile\n\nNo proof.\n", encoding="utf-8")
+
+            exit_code = main([str(readme), "--format", "json", "--min-score", "100"])
+
+        self.assertEqual(exit_code, 1)
+
+    def test_cli_fail_on_warnings(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "recipes").mkdir()
+            (root / "labs").mkdir()
+            (root / "recipes" / "example.md").write_text("# Recipe\n", encoding="utf-8")
+            (root / "labs" / "example.md").write_text("# Lab\n", encoding="utf-8")
+            readme = root / "README.md"
+            readme.write_text(WARNING_README, encoding="utf-8")
+
+            exit_code = main([str(readme), "--format", "json", "--fail-on-warnings"])
+
+        self.assertEqual(exit_code, 1)
 
 
 if __name__ == "__main__":

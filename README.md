@@ -34,7 +34,12 @@ PYTHONPATH=src python3 -m profile_proof_audit ../goal-quiero-que-me-crees-un/REA
 PYTHONPATH=src python3 -m profile_proof_audit README.md
 PYTHONPATH=src python3 -m profile_proof_audit README.md --check-http
 PYTHONPATH=src python3 -m profile_proof_audit README.md --format json
+PYTHONPATH=src python3 -m profile_proof_audit README.md --check-http --min-score 100 --fail-on-warnings
 ```
+
+By default the CLI is informational and exits `0` after producing a report.
+Use `--min-score` or `--fail-on-warnings` when you want CI to fail on weak
+profile proof.
 
 ## Example Output
 

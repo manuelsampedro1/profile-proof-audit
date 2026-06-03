@@ -216,6 +216,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("readme", help="Path to profile README.md.")
     parser.add_argument("--check-http", action="store_true", help="Check external links over HTTP.")
     parser.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    parser.add_argument(
+        "--min-score",
+        type=int,
+        default=0,
+        help="Exit non-zero when the proof score is below this threshold.",
+    )
+    parser.add_argument(
+        "--fail-on-warnings",
+        action="store_true",
+        help="Exit non-zero when warnings are present.",
+    )
     return parser
 
 
@@ -231,4 +242,8 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(asdict(report), indent=2))
     else:
         print(render_markdown(report), end="")
+    if report.score < args.min_score:
+        return 1
+    if args.fail_on_warnings and report.warnings:
+        return 1
     return 0
